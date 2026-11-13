@@ -42,7 +42,6 @@ export async function getDb() {
       db.collection("matchScores").createIndex({ organizationId: 1, matchId: 1, athleteId: 1 }, { unique: true }),
       db.collection("loginAttempts").createIndex({ key: 1 }, { unique: true }),
       db.collection("loginAttempts").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
-      db.collection("auditEvents").createIndex({ organizationId: 1, createdAt: -1 }),
     ]).then(() => undefined).catch((error: unknown) => {
       global.fieldhouseIndexesPromise = undefined;
       throw error;

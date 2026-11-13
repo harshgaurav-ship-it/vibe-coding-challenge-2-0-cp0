@@ -11,7 +11,6 @@ export const runtime = "nodejs";
 const teamSchema = z.object({
   name: z.string().trim().min(2).max(80),
   sport: z.string().trim().min(2).max(50),
-  season: z.string().trim().min(2).max(40),
 });
 
 export async function GET() {
@@ -23,7 +22,7 @@ export async function GET() {
     const teamIds = await getAccessibleTeamIds(db, access.user);
     const query = { organizationId, ...teamScope(teamIds) };
     const teams = await db.collection<TeamDocument>("teams").find(query).sort({ sport: 1, name: 1 }).toArray();
-    return privateJson({ teams: teams.map((team) => ({ id: String(team._id), name: team.name, sport: team.sport, season: team.season, coachIds: access.user?.role === "admin" ? (team.coachIds ?? []).map(String) : undefined })) });
+    return privateJson({ teams: teams.map((team) => ({ id: String(team._id), name: team.name, sport: team.sport, coachIds: access.user?.role === "admin" || access.user?.role === "coach" ? (team.coachIds ?? []).map(String) : undefined })) });
   } catch {
     return privateJson({ error: "Unable to load teams." }, 503);
   }
@@ -37,22 +36,21 @@ export async function POST(request: Request) {
   const parsed = await readJson(request);
   if (!parsed.ok) return privateJson({ error: parsed.error }, parsed.status);
   const validation = teamSchema.safeParse(parsed.body);
-  if (!validation.success) return privateJson({ error: "Add a team name, sport, and season." }, 400);
-  const { name, sport, season } = validation.data;
+  if (!validation.success) return privateJson({ error: "Add a team name and sport." }, 400);
+  const { name, sport } = validation.data;
   try {
     const organizationId = new ObjectId(access.user.organizationId);
     const team = await withDbTransaction(async (transactionDb, session) => {
-      const existing = await transactionDb.collection<TeamDocument>("teams").findOne({ organizationId, name, sport, season }, { session });
-      if (existing) throw Object.assign(new Error("That team already exists for this season."), { status: 409 });
+      const existing = await transactionDb.collection<TeamDocument>("teams").findOne({ organizationId, name, sport }, { session });
+      if (existing) throw Object.assign(new Error("That team already exists for this sport."), { status: 409 });
       const coachIds = access.user!.role === "coach" ? [new ObjectId(access.user!.id)] : [];
-      const result = await transactionDb.collection("teams").insertOne({ organizationId, name, sport, season, coachIds, createdAt: new Date() }, { session });
-      await transactionDb.collection("auditEvents").insertOne({ organizationId, actorId: new ObjectId(access.user!.id), action: "team.created", entity: "team", entityId: result.insertedId, createdAt: new Date() }, { session });
+      const result = await transactionDb.collection("teams").insertOne({ organizationId, name, sport, coachIds, createdAt: new Date() }, { session });
       return result.insertedId;
     });
-    return privateJson({ team: { id: String(team), name, sport, season } }, 201);
+    return privateJson({ team: { id: String(team), name, sport } }, 201);
   } catch (error) {
-    if (error && typeof error === "object" && "status" in error && error.status === 409) return privateJson({ error: "That team already exists for this season." }, 409);
-    if (error && typeof error === "object" && "code" in error && error.code === 11000) return privateJson({ error: "That team already exists for this season." }, 409);
+    if (error && typeof error === "object" && "status" in error && error.status === 409) return privateJson({ error: "That team already exists for this sport." }, 409);
+    if (error && typeof error === "object" && "code" in error && error.code === 11000) return privateJson({ error: "That team already exists for this sport." }, 409);
     return privateJson({ error: "Unable to create the team." }, 503);
   }
 }

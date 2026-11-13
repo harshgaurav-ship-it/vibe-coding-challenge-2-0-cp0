@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Fieldhouse — Sports program management",
-  description: "Official attendance and season records for school, college, and academy sports programs.",
+  description: "Attendance, match records, and ready-player lists for a sports academy.",
   icons: { icon: "/fieldhouse-mark.svg" },
 };
 

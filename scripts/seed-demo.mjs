@@ -3,7 +3,7 @@ import { MongoClient, ObjectId } from "mongodb";
 
 const uri = process.env.MONGODB_URI;
 const databaseName = process.env.MONGODB_DB || "";
-const required = ["DEMO_ADMIN_EMAIL", "DEMO_ADMIN_PASSWORD", "DEMO_COACH_EMAIL", "DEMO_COACH_PASSWORD", "DEMO_SCOUT_EMAIL", "DEMO_SCOUT_PASSWORD", "DEMO_PLAYER_EMAIL", "DEMO_PLAYER_PASSWORD"];
+const required = ["DEMO_COACH_EMAIL", "DEMO_COACH_PASSWORD", "DEMO_SCOUT_EMAIL", "DEMO_SCOUT_PASSWORD", "DEMO_PLAYER_EMAIL", "DEMO_PLAYER_PASSWORD"];
 
 if (process.env.NODE_ENV === "production") throw new Error("The demo seed is disabled in production.");
 if (process.env.FIELDHOUSE_SEED_DEMO !== "true") throw new Error("Set FIELDHOUSE_SEED_DEMO=true to explicitly enable demo seeding.");
@@ -59,7 +59,6 @@ try {
     createdAt: new Date(),
   });
   const organizationId = organization._id;
-  const season = "Monsoon 2026";
   const teamInputs = [
     { name: "U17 Football", sport: "Football" },
     { name: "Senior Basketball", sport: "Basketball" },
@@ -67,7 +66,7 @@ try {
   ];
   const teamByName = new Map();
   for (const item of teamInputs) {
-    const team = await upsertDoc(teams, { organizationId, name: item.name, sport: item.sport, season }, { organizationId, name: item.name, sport: item.sport, season, coachIds: [], createdAt: new Date() });
+    const team = await upsertDoc(teams, { organizationId, name: item.name, sport: item.sport }, { organizationId, name: item.name, sport: item.sport, coachIds: [], createdAt: new Date() });
     teamByName.set(item.name, team);
   }
 
@@ -101,7 +100,6 @@ try {
   }
 
   const accountInputs = [
-    { name: "Maya Singh", email: process.env.DEMO_ADMIN_EMAIL.toLowerCase(), password: process.env.DEMO_ADMIN_PASSWORD, role: "admin" },
     { name: "Arjun Sinha", email: process.env.DEMO_COACH_EMAIL.toLowerCase(), password: process.env.DEMO_COACH_PASSWORD, role: "coach" },
     { name: "Riya Das", email: process.env.DEMO_SCOUT_EMAIL.toLowerCase(), password: process.env.DEMO_SCOUT_PASSWORD, role: "scout" },
     { name: "Aarav Mehta", email: process.env.DEMO_PLAYER_EMAIL.toLowerCase(), password: process.env.DEMO_PLAYER_PASSWORD, role: "player", athleteId: athleteByName.get("Aarav Mehta")._id },
@@ -185,7 +183,7 @@ try {
   });
   for (const athlete of footballAthletes) await attendance.updateOne({ organizationId, sessionId: openSession._id, athleteId: athlete._id }, { $set: { organizationId, sessionId: openSession._id, athleteId: athlete._id, status: "absent", recordedBy: coach?._id ?? new ObjectId(), updatedAt: new Date() } }, { upsert: true });
 
-  console.log(`Demo data is ready in ${databaseName}. Accounts were provisioned for admin, coach, scout, and player roles.`);
+  console.log(`Demo data is ready in ${databaseName}. Accounts were provisioned for coach, scout, and player roles.`);
 } finally {
   await client.close();
 }

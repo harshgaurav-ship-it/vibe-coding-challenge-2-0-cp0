@@ -20,7 +20,7 @@ export default function LoginPage() {
     const values = new FormData(event.currentTarget);
     const body = mode === "login"
       ? { email: String(values.get("email")).trim(), password: String(values.get("password")) }
-      : { organizationName: String(values.get("organizationName")).trim(), organizationType: String(values.get("organizationType")), city: String(values.get("city")).trim(), adminName: String(values.get("adminName")).trim(), email: String(values.get("email")).trim(), password: String(values.get("password")) };
+      : { organizationName: String(values.get("organizationName")).trim(), coachName: String(values.get("coachName")).trim(), email: String(values.get("email")).trim(), password: String(values.get("password")) };
     try {
       const response = await fetch(mode === "login" ? "/api/auth/login" : "/api/onboarding", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
@@ -38,30 +38,29 @@ export default function LoginPage() {
     <section className="auth-story">
       <Link className="auth-brand" href="/"><span><ShieldCheck size={20} /></span>fieldhouse<span>.</span></Link>
       <div className="auth-story-copy"><small>SPORTS PROGRAM MANAGEMENT</small><h1>Every practice<br />has a place<br />in the <em>record.</em></h1><p>Attendance, teams, and match readiness for schools, colleges, and academies.</p></div>
-      <div className="auth-story-foot"><span><CheckCircle2 size={15} /> Official records</span><span><CheckCircle2 size={15} /> Role-based access</span><span><CheckCircle2 size={15} /> Built for every season</span></div>
+      <div className="auth-story-foot"><span><CheckCircle2 size={15} /> Official records</span><span><CheckCircle2 size={15} /> Role-based access</span><span><CheckCircle2 size={15} /> Ready for the next match</span></div>
     </section>
     <section className="auth-main">
       <div className="auth-card">
         <div className="auth-mobile-brand"><span><ShieldCheck size={18} /></span> fieldhouse<span>.</span></div>
-        <div className="auth-kicker">{mode === "login" ? "WELCOME BACK" : "NEW WORKSPACE"}</div>
-        <h2>{mode === "login" ? "Sign in to Fieldhouse" : "Set up your institution"}</h2>
-        <p className="auth-intro">{mode === "login" ? "Continue to your sports program workspace." : "Create the private workspace for your school, college, or academy."}</p>
+        <div className="auth-kicker">{mode === "login" ? "WELCOME BACK" : "FIRST COACH ACCOUNT"}</div>
+        <h2>{mode === "login" ? "Sign in to Fieldhouse" : "Create your academy"}</h2>
+        <p className="auth-intro">{mode === "login" ? "Continue to your sports program workspace." : "Create your academy workspace and coach account in one step."}</p>
         {error && <div className="auth-error" role="alert">{error}</div>}
         {notice && <div className="auth-success" role="status">{notice}</div>}
         <form className="auth-form" onSubmit={submit}>
           {mode === "setup" && <>
-            <label>Institution name<input name="organizationName" required minLength={3} placeholder="e.g. Dumka Sports Academy" autoComplete="organization" /></label>
-            <div className="auth-fields-two"><label>Institution type<select name="organizationType"><option value="college">College</option><option value="school">School</option><option value="academy">Sports academy</option></select></label><label>City<input name="city" placeholder="e.g. Dumka" autoComplete="address-level2" /></label></div>
-            <label>Administrator name<input name="adminName" required minLength={2} placeholder="Your full name" autoComplete="name" /></label>
+            <label>Academy name<input name="organizationName" required minLength={3} placeholder="e.g. Dumka Sports Academy" autoComplete="organization" /></label>
+            <label>Coach name<input name="coachName" required minLength={2} placeholder="Your full name" autoComplete="name" /></label>
           </>}
-          <label>Email address<input name="email" required type="email" autoComplete="email" placeholder="you@institution.edu" /></label>
+          <label>Email address<input name="email" required type="email" autoComplete="email" placeholder="you@example.com" /></label>
           <label>Password<input name="password" required type="password" minLength={mode === "setup" ? 12 : 1} autoComplete={mode === "login" ? "current-password" : "new-password"} placeholder={mode === "setup" ? "At least 12 characters" : "Your password"} /></label>
-          <button className="auth-submit" disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create workspace"} <ArrowRight size={16} /></button>
+          <button className="auth-submit" disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create coach account"} <ArrowRight size={16} /></button>
         </form>
-        <div className="auth-switch">{mode === "login" ? "Setting up Fieldhouse for the first time?" : "Already have an account?"}<button onClick={() => { setMode(mode === "login" ? "setup" : "login"); setError(""); setNotice(""); }}>{mode === "login" ? "Create an institution" : "Sign in"}</button></div>
-        <div className="auth-security"><Building2 size={15} /><span>Each institution’s records stay in its own workspace. Access depends on your account role.</span></div>
+        <div className="auth-switch">{mode === "login" ? "Setting up Fieldhouse for the first time?" : "Already have an account?"}<button onClick={() => { setMode(mode === "login" ? "setup" : "login"); setError(""); setNotice(""); }}>{mode === "login" ? "Create an academy" : "Sign in"}</button></div>
+        <div className="auth-security"><Building2 size={15} /><span>The first account is a coach. Each academy’s records stay in its own workspace.</span></div>
       </div>
-      <footer className="auth-footer">FIELDHOUSE · A SEASON STARTS WITH A RECORD</footer>
+      <footer className="auth-footer">FIELDHOUSE · SPORTS RECORDS FOR EVERY TEAM</footer>
     </section>
   </main>;
 }

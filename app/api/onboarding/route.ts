@@ -9,9 +9,7 @@ export const runtime = "nodejs";
 
 const organizationSchema = z.object({
   organizationName: z.string().trim().min(3).max(100),
-  organizationType: z.enum(["academy", "school", "college"]),
-  city: z.string().trim().max(80).optional().default(""),
-  adminName: z.string().trim().min(2).max(100),
+  coachName: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(254),
   password: z.string().min(12).max(128),
 });
@@ -26,7 +24,7 @@ export async function POST(request: Request) {
   const body = await readJson(request);
   if (!body.ok) return privateJson({ error: body.error }, body.status);
   const parsed = organizationSchema.safeParse(body.body);
-  if (!parsed.success) return privateJson({ error: "Complete the institution and administrator details. Use a password with at least 12 characters." }, 400);
+  if (!parsed.success) return privateJson({ error: "Enter the academy name, coach details, and a password with at least 12 characters." }, 400);
 
   try {
     if (!process.env.AUTH_SECRET || process.env.AUTH_SECRET.length < 32) throw new Error("AUTH_SECRET must be at least 32 characters.");
@@ -39,19 +37,18 @@ export async function POST(request: Request) {
     const userId = await withDbTransaction(async (db, session) => {
       if (await db.collection("users").findOne({ email }, { session })) throw Object.assign(new Error("An account already uses that email."), { status: 409 });
       const organizationResult = await db.collection("organizations").insertOne({
-        name: parsed.data.organizationName, slug, type: parsed.data.organizationType,
-        city: parsed.data.city, timezone: "Asia/Kolkata", createdAt: now,
+        name: parsed.data.organizationName, slug, type: "academy",
+        timezone: "Asia/Kolkata", createdAt: now,
       }, { session });
       const newUserId = new ObjectId();
       await db.collection("users").insertOne({
         _id: newUserId, organizationId: organizationResult.insertedId,
-        name: parsed.data.adminName, email, passwordHash, role: "admin", active: true, createdAt: now,
+        name: parsed.data.coachName, email, passwordHash, role: "coach", active: true, createdAt: now,
       }, { session });
-      await db.collection("auditEvents").insertOne({ organizationId: organizationResult.insertedId, actorId: newUserId, action: "organization.created", entity: "organization", entityId: organizationResult.insertedId, createdAt: now }, { session });
       return newUserId;
     });
     await createSession(userId);
-    return privateJson({ ok: true, user: { id: String(userId), name: parsed.data.adminName, email, role: "admin" } }, 201);
+    return privateJson({ ok: true, user: { id: String(userId), name: parsed.data.coachName, email, role: "coach" } }, 201);
   } catch (error) {
     if (error && typeof error === "object" && "status" in error && error.status === 409) return privateJson({ error: "An account already uses that email." }, 409);
     if (error && typeof error === "object" && "code" in error && error.code === 11000) {

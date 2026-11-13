@@ -16,7 +16,7 @@ const staffSchema = z.object({
 });
 
 export async function GET() {
-  const access = await authorize(["admin"]);
+  const access = await authorize(["admin", "coach"]);
   if (!access.user) return privateJson({ error: access.error }, access.status);
   try {
     const db = await getDb();
@@ -33,7 +33,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const originFailure = sameOriginFailure(request);
   if (originFailure) return originFailure;
-  const access = await authorize(["admin"]);
+  const access = await authorize(["admin", "coach"]);
   if (!access.user) return privateJson({ error: access.error }, access.status);
   const body = await readJson(request);
   if (!body.ok) return privateJson({ error: body.error }, body.status);
@@ -48,10 +48,6 @@ export async function POST(request: Request) {
       const result = await db.collection("users").insertOne({
         organizationId, name: parsed.data.name, email, passwordHash,
         role: parsed.data.role, active: true, createdAt: new Date(),
-      }, { session });
-      await db.collection("auditEvents").insertOne({
-        organizationId, actorId: new ObjectId(access.user!.id), action: "staff.created",
-        entity: "user", entityId: result.insertedId, details: { role: parsed.data.role }, createdAt: new Date(),
       }, { session });
       return result.insertedId;
     });

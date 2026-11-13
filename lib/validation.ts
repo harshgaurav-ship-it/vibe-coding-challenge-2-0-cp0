@@ -34,13 +34,15 @@ export const sessionSchema = z.object({
 });
 
 export const attendanceSchema = z.object({
-  action: z.enum(["mark", "close"]),
+  action: z.enum(["mark", "markAll", "close"]),
   athleteId: z.string().regex(/^[a-f\d]{24}$/i).optional(),
   status: z.enum(["present", "absent"]).optional(),
 });
 
 export const matchSchema = z.object({
   sessionId: z.string().regex(/^[a-f\d]{24}$/i),
+  date: calendarDate,
+  sport: z.string().trim().min(2).max(50),
   opponent: z.string().trim().min(2).max(100),
   startTime: clockTime,
 });

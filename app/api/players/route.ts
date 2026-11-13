@@ -69,7 +69,6 @@ export async function POST(request: Request) {
         teamName: team.name, year, joinedAt, active: true, createdAt: new Date(),
       }, { session });
       if (userId) await transactionDb.collection("users").updateOne({ _id: userId, organizationId }, { $set: { athleteId: athleteResult.insertedId } }, { session });
-      await transactionDb.collection("auditEvents").insertOne({ organizationId, actorId: new ObjectId(access.user!.id), action: "athlete.created", entity: "athlete", entityId: athleteResult.insertedId, createdAt: new Date() }, { session });
       return athleteResult.insertedId;
     });
     const athlete = await db.collection<AthleteDocument>("athletes").findOne({ _id: athleteId, organizationId });

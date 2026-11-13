@@ -47,7 +47,6 @@ export interface TeamDocument {
   organizationId: ObjectId;
   name: string;
   sport: string;
-  season: string;
   coachIds: ObjectId[];
   createdAt: Date;
 }
